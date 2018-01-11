@@ -9,25 +9,22 @@ const log = new Winston.Logger({
         level: process.env.loglevel || 'info'
     })]
 });
+
 const Bot = require('./bot/bot.js');
+const agent_config = require('./config/config.js')[process.env.LP_ACCOUNT][process.env.LP_USER];
 
 // TODO: Add logic that a reader bot would use, such as logging consumer profile and agent info
 
 /**
  * The reader bot starts in the Away state and subscribes to all conversations
  *
- * Bot configuration is set via environment variables:
- * * LP_ACCOUNT
- * and one of:
- * * LP_USER & LP_PASS
- * * LP_TOKEN & LP_USERID
- * * LP_ASSERTION
- * * LP_USER & LP_APPKEY & LP_SECRET & LP_ACCESSTOKEN & LP_ACCESSTOKENSECRET
+ * Bot configuration is set via a config file (see config/example_config.js)
+ * and environment variables LP_ACCOUNT and LP_USER
  *
  * @type {Bot}
  */
 
-const reader = new Bot(Bot.config, 'AWAY', true);
+const reader = new Bot(agent_config, 'AWAY', true);
 
 reader.on(Bot.const.CONNECTED, data => {
     log.info(`[reader.js] CONNECTED ${JSON.stringify(data)}`);
@@ -43,11 +40,8 @@ reader.on(Bot.const.CONVERSATION_NOTIFICATION, event => {
     // Iterate through changes
     event.changes.forEach(change => {
         // If I'm not already a participant, join as a reader
-        if (!reader.isPIDaParticipant(change.result.conversationDetails)) { reader.joinConversation(change.result.convId, 'READER') }
+        if (!reader.getRole(change.result.conversationDetails)) { reader.joinConversation(change.result.convId, 'READER') }
     });
-
-
-
 });
 
 reader.on(Bot.const.AGENT_STATE_NOTIFICATION, event => {

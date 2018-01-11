@@ -9,23 +9,22 @@ const log = new Winston.Logger({
         level: process.env.loglevel || 'info'
     })]
 });
+
 const Bot = require('./bot/bot.js');
+const agent_config = require('./config/config.js')[process.env.LP_ACCOUNT][process.env.LP_USER];
 
 /**
  * The agent bot starts in the default state ('ONLINE') and subscribes only to its own conversations
  *
- * Bot configuration is set via environment variables:
- * * LP_ACCOUNT
- * and one of:
- * * LP_USER & LP_PASS
- * * LP_TOKEN & LP_USERID
- * * LP_ASSERTION
- * * LP_USER & LP_APPKEY & LP_SECRET & LP_ACCESSTOKEN & LP_ACCESSTOKENSECRET
+ * Bot configuration is set via a config file (see config/example_config.js)
+ * and environment variables LP_ACCOUNT and LP_USER
+ *
+ * transferSkill should be set to the ID of the skill you want the bot to transfer to
  *
  * @type {Bot}
  */
 
-const agent = new Bot(Bot.config);
+const agent = new Bot(agent_config);
 const transferSkill = '277498214';
 
 agent.on(Bot.const.CONNECTED, data => {
@@ -36,9 +35,7 @@ agent.on(Bot.const.ROUTING_NOTIFICATION, data => {
     log.info(`[agent.js] ROUTING_NOTIFICATION ${JSON.stringify(data)}`);
 
     // Accept all waiting conversations
-    if (data.changes.length > 0) {
-        agent.acceptWaitingConversations(data);
-    }
+    agent.acceptWaitingConversations(data);
 });
 
 agent.on(Bot.const.CONVERSATION_NOTIFICATION, event => {
@@ -53,7 +50,7 @@ agent.on(Bot.const.CONTENT_NOTIFICATION, event => {
     log.info(`[agent.js] CONTENT_NOTIFICATION ${JSON.stringify(event)}`);
 
     // Respond to messages from the CONSUMER
-    if (event.originator.role === 'CONSUMER') {
+    if (event.originatorMetadata.role === 'CONSUMER') {
         switch (event.message.toLowerCase()) {
             case 'transfer':
                 agent.sendText(event.dialogId, 'transferring you to a new skill');
@@ -70,6 +67,22 @@ agent.on(Bot.const.CONTENT_NOTIFICATION, event => {
 
             case 'date':
                 agent.sendText(event.dialogId, (new Date()).toDateString());
+                break;
+
+            case 'online':
+                agent.setAgentState({ availability: 'ONLINE' }, () => {});
+                break;
+
+            case 'back soon':
+                agent.setAgentState({ availability: 'BACK_SOON' }, () => {});
+                break;
+
+            case 'away':
+                agent.setAgentState({ availability: 'AWAY' }, () => {});
+                break;
+
+            case 'offline':
+                agent.setAgentState({ availability: 'OFFLINE' }, () => {});
                 break;
 
             case 'content':

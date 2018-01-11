@@ -189,7 +189,7 @@ class Bot extends Agent {
                             dialogId: body.dialogId,
                             sequence: change.sequence,
                             message: change.event.message,
-                            originator: change.originatorMetadata
+                            originatorMetadata: change.originatorMetadata
                         };
                     }
                     // remove from respond list all the messages that were already read
@@ -201,12 +201,13 @@ class Bot extends Agent {
                 }
             });
 
-            // Mark messages as read and emit content notification
-            if (this.myConversations[body.dialogId] &&
-                this.isPIDaParticipant(this.myConversations[body.dialogId].conversationDetails) === 'ASSIGNED_AGENT') {
+            // Mark messages as read only if my role is ASSIGNED_AGENT, and emit a content notification
+            if (this.myConversations[body.dialogId]) {
                 Object.keys(respond).forEach(key => {
                     let contentEvent = respond[key];
-                    this.markAsRead(contentEvent.dialogId, [contentEvent.sequence]);
+                    if (this.getRole(this.myConversations[body.dialogId].conversationDetails) === 'ASSIGNED_AGENT') {
+                        this.markAsRead(contentEvent.dialogId, [contentEvent.sequence]);
+                    }
                     this.emit(Bot.const.CONTENT_NOTIFICATION, contentEvent);
                 });
             }
@@ -244,7 +245,7 @@ class Bot extends Agent {
         });
 
         /**
-         * Get the consumerProfile from a conversation
+         * Get a the consumer's userProfile from a conversation
          *
          * @param {String} conversationId
          * @param {Object} conversationDetails
@@ -252,9 +253,9 @@ class Bot extends Agent {
         this.getConsumerProfile = function (conversationId, conversationDetails) {
             const consumerId = conversationDetails.participants.filter(p => p.role === 'CONSUMER')[0].id;
             this.getUserProfile(consumerId, (e, resp) => {
-                if (e) log.error(`[bot.js] getUserProfile: ${JSON.stringify(e)}`);
+                if (e) log.error(`[bot.js] getConsumerProfile: ${JSON.stringify(e)}`);
                 else {
-                    log.info(`[bot.js] conversation ${conversationId} consumerProfile ${JSON.stringify(resp)}`);
+                    log.info(`[bot.js] getConsumerProfile: conversation ${conversationId} consumerProfile ${JSON.stringify(resp)}`);
                 }
             });
         };
@@ -423,8 +424,8 @@ class Bot extends Agent {
                     }
                 ]
             }, (e) => {
-                if (e) { log.error(`[bot.js] leaveConversation ${JSON.stringify(e)}`) }
-                else { log.silly('[bot.js] leaveConversation successful') }
+                if (e) { log.error(`[bot.js] removeParticipant ${JSON.stringify(e)}`) }
+                else { log.silly('[bot.js] removeParticipant successful') }
             });
         };
 
@@ -456,7 +457,7 @@ class Bot extends Agent {
          *
          * @returns {String} - A role name or 'undefined'
          */
-        this.isPIDaParticipant = (conversationDetails, pid = this.agentId) => {
+        this.getRole = (conversationDetails, pid = this.agentId) => {
             let participant = conversationDetails.participants.filter(p => p.id === pid)[0];
             return participant && participant.role;
         };
@@ -524,32 +525,6 @@ class Bot extends Agent {
                 }
             });
         }
-    }
-
-    static get config() {
-        let conf = {};
-        if (!process.env.LP_ACCOUNT) { throw new Error('missing accountId param') }
-        else { conf.accountId = process.env.LP_ACCOUNT }
-
-        if (process.env.LP_TOKEN) {
-            conf.token = process.env.LP_TOKEN;
-        } else if (process.env.LP_PASS) {
-            conf.username = process.env.LP_USER;
-            conf.password = process.env.LP_PASS;
-        } else if (process.env.LP_ASSERTION) {
-            conf.userId = process.env.LP_USERID;
-            conf.assertion = process.env.LP_ASSERTION;
-        } else if (process.env.LP_APPKEY) {
-            conf.username = process.env.LP_USER;
-            conf.appKey = process.env.LP_APPKEY;
-            conf.secret = process.env.LP_SECRET;
-            conf.accessToken = process.env.LP_ACCESSTOKEN;
-            conf.accessTokenSecret = process.env.LP_ACCESSTOKENSECRET;
-        } else {
-            throw new Error('missing token or user/password or assertion or appKey/secret/accessToken/accessTokenSecret params');
-        }
-
-        return conf;
     }
 }
 

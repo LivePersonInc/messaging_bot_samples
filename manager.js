@@ -9,23 +9,20 @@ const log = new Winston.Logger({
         level: process.env.loglevel || 'info'
     })]
 });
+
 const Bot = require('./bot/bot.js');
+const agent_config = require('./config/config.js')[process.env.LP_ACCOUNT][process.env.LP_USER];
 
 /**
  * The manager bot starts in the Away state and subscribes to all conversations
  *
- * Bot configuration is set via environment variables:
- * * LP_ACCOUNT
- * and one of:
- * * LP_USER & LP_PASS
- * * LP_TOKEN & LP_USERID
- * * LP_ASSERTION
- * * LP_USER & LP_APPKEY & LP_SECRET & LP_ACCESSTOKEN & LP_ACCESSTOKENSECRET
+ * Bot configuration is set via a config file (see config/example_config.js)
+ * and environment variables LP_ACCOUNT and LP_USER
  *
  * @type {Bot}
  */
 
-const manager = new Bot(Bot.config, 'AWAY', true);
+const manager = new Bot(agent_config, 'AWAY', true);
 
 manager.on(Bot.const.CONNECTED, data => {
     log.info(`[manager.js] CONNECTED ${JSON.stringify(data)}`);
@@ -41,7 +38,7 @@ manager.on(Bot.const.CONVERSATION_NOTIFICATION, event => {
     // Iterate through notifications
     event.changes.forEach(change => {
         // If I'm not already a participant, join as a manager
-        if (!manager.isPIDaParticipant(change.result.conversationDetails)) { manager.joinConversation(change.result.convId, 'MANAGER') }
+        if (!manager.getRole(change.result.conversationDetails)) { manager.joinConversation(change.result.convId, 'MANAGER') }
     });
 });
 

@@ -1,1 +1,6 @@
-# Created by .ignore support plugin (hsz.mobi)
+
+.DS_Store
+.idea/
+config/config.js
+/extended_bot_samples.iml
+/node_modules/
