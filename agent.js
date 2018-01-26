@@ -50,7 +50,9 @@ agent.on(Bot.const.CONTENT_NOTIFICATION, event => {
     log.info(`[agent.js] CONTENT_NOTIFICATION ${JSON.stringify(event)}`);
 
     // Respond to messages from the CONSUMER
-    if (event.originatorMetadata.role === 'CONSUMER') {
+    if (event.originatorMetadata.role === 'CONSUMER'
+        && agent.getRole(agent.myConversations[event.dialogId].conversationDetails) === 'ASSIGNED_AGENT') {
+
         switch (event.message.toLowerCase()) {
             case 'transfer':
                 agent.sendText(event.dialogId, 'transferring you to a new skill');

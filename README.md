@@ -4,10 +4,10 @@ The best way to use the SDK is to extend the Agent class with your own logic and
 
 In all examples the bot's login credentials are loaded from the `config/config.js` file according to environment variables `LP_ACCOUNT` & `LP_USER` specifying which account and user's credentials to use.
 
-- [Pre-requisites](pre-requisites)
-- [Agent Example](agent-example)
-- [Reader Example](reader-example)
-- [Manager Example](manager-example)
+- [Pre-requisites](#pre-requisites)
+- [Agent Example](#agent-example)
+- [Reader Example](#reader-example)
+- [Manager Example](#manager-example)
 
 ### Pre-requisites
 - A LivePerson Account with Messaging
@@ -23,7 +23,7 @@ This bot then takes various actions in response to messages from the visitor:
 - If the visitor says "content" the bot will send a structured content object.
   - Further information about creating valid structured content objects can be found [here][7]
 - If the visitor says "transfer" the bot will transfer the conversation to the configured transferSkill.
-  - In order for the bot to successfully transfer conversations to a new skill you must set the value of `transferSkill` in `agent.js` to a string matching the Skill ID of the target skill. You can obtain your skill ID using the [Skills API][8].
+  - In order for the bot to successfully transfer conversations to a new skill you must set the value of [`transferSkill`][6] in `agent.js` to a string matching the Skill ID of the target skill. You can obtain your skill ID using the [Skills API][8].
 - If the visitor says "close" the bot will close the conversation
 - Anything else the visitor says the bot will simply repeat back to the visitor prefixed with 'you said '.
 
@@ -68,5 +68,6 @@ This is an example of a bot acting as a Manager. It starts in the `AWAY` state s
 [3]: reader.js
 [4]: manager.js
 [5]: /config/example_config.js
+[6]: agent.js#L28
 [7]: https://developers.liveperson.com/structured-content-templates.html
 [8]: https://developers.liveperson.com/overview.html
