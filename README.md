@@ -4,12 +4,12 @@ The best way to use the SDK is to extend the Agent class with your own logic and
 
 In all examples the bot's login credentials are loaded from the `config/config.js` file according to environment variables `LP_ACCOUNT` & `LP_USER` specifying which account and user's credentials to use.
 
-- [Pre-requisites](#pre-requisites)
+- [Pre-requisites](#global-pre-requisites)
 - [Agent Example](#agent-example)
 - [Reader Example](#reader-example)
 - [Manager Example](#manager-example)
 
-### Pre-requisites
+### Global Pre-requisites
 - A LivePerson Account with Messaging
 - A `config/config.js` file that exports a configuration object (see [`config/example_config.js`][5])
 
