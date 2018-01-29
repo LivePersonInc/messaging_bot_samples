@@ -11,7 +11,12 @@ const log = new Winston.Logger({
 });
 
 const Bot = require('./bot/bot.js');
-const agent_config = require('./config/config.js')[process.env.LP_ACCOUNT][process.env.LP_USER];
+let agent_config = {};
+try {
+    agent_config = require('./config/config.js')[process.env.LP_ACCOUNT][process.env.LP_USER];
+} catch (ex) {
+    log.warn(`[manager.js] Error loading config: ${ex}`)
+}
 
 /**
  * The manager bot starts in the Away state and subscribes to all conversations
