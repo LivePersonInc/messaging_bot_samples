@@ -57,5 +57,3 @@ manager.on(Bot.const.SOCKET_CLOSED, event => {
 manager.on(Bot.const.ERROR, error => {
     log.error(`[manager.js] ERROR ${JSON.stringify(error)}`);
 });
-
-manager.on('error', e => log.error(`[manager.js] ${JSON.stringify(e)}`));

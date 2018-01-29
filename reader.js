@@ -59,5 +59,3 @@ reader.on(Bot.const.SOCKET_CLOSED, event => {
 reader.on(Bot.const.ERROR, error => {
     log.error(`[reader.js] ERROR ${JSON.stringify(error)}`);
 });
-
-reader.on('error', e => log.error(`[reader.js] ${JSON.stringify(e)}`));

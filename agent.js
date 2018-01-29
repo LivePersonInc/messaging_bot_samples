@@ -140,5 +140,3 @@ agent.on(Bot.const.SOCKET_CLOSED, event => {
 agent.on(Bot.const.ERROR, error => {
     log.error(`[agent.js] ERROR ${JSON.stringify(error)}`);
 });
-
-agent.on('error', e => log.error(`[agent.js] ${JSON.stringify(e)}`));
