@@ -11,7 +11,12 @@ const log = new Winston.Logger({
 });
 
 const Bot = require('./bot/bot.js');
-const agent_config = require('./config/config.js')[process.env.LP_ACCOUNT][process.env.LP_USER];
+let agent_config = {};
+try {
+    agent_config = require('./config/config.js')[process.env.LP_ACCOUNT][process.env.LP_USER];
+} catch (ex) {
+    log.warn(`[agent.js] Error loading config: ${ex}`)
+}
 
 /**
  * The agent bot starts in the default state ('ONLINE') and subscribes only to its own conversations

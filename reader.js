@@ -11,7 +11,12 @@ const log = new Winston.Logger({
 });
 
 const Bot = require('./bot/bot.js');
-const agent_config = require('./config/config.js')[process.env.LP_ACCOUNT][process.env.LP_USER];
+let agent_config = {};
+try {
+    agent_config = require('./config/config.js')[process.env.LP_ACCOUNT][process.env.LP_USER];
+} catch (ex) {
+    log.warn(`[reader.js] Error loading config: ${ex}`)
+}
 
 // TODO: Add logic that a reader bot would use, such as logging consumer profile and agent info
 
