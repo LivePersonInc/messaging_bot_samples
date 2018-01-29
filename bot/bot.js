@@ -90,7 +90,9 @@ class Bot extends Agent {
             this.emit(Bot.const.CONNECTED, message);
 
             // Get server clock at a regular interval in order to keep the connection alive
-            this._pingClock = setInterval(this._getClock, this.clockPingInterval);
+            this._pingClock = setInterval(() => {
+                getClock(this)
+            }, this.clockPingInterval);
 
             // Subscribe to Agent State notifications
             this.subscribeAgentsState({}, (e, resp) => {
@@ -553,23 +555,27 @@ class Bot extends Agent {
         this.myConversations[conversationId] = _newData;
     };
 
-    /**
-     * Get the server clock and compare it to the client clock.
-     * Also used to periodically ping the server for keep-alive.
-     *
-     * @param {Object} context
-     * @private
-     */
     _getClock () {
-        let before = new Date();
-        this.getClock({}, (e, resp) => {
-            if (e) {log.error(`[bot.js] getClock: ${JSON.stringify(e)}`)}
-            else {
-                let after = new Date();
-                log.silly(`[bot.js] getClock: request took ${after.getTime()-before.getTime()}ms, diff = ${resp.currentTime - after}`);
-            }
-        });
-    }
+        _getClock(this);
+    };
 }
+
+/**
+ * Get the server clock and compare it to the client clock.
+ * Also used to periodically ping the server for keep-alive.
+ *
+ * @param {Object} context
+ * @private
+ */
+const getClock = (context) => {
+    let before = new Date();
+    context.getClock({}, (e, resp) => {
+        if (e) {log.error(`[bot.js] getClock: ${JSON.stringify(e)}`)}
+        else {
+            let after = new Date();
+            log.silly(`[bot.js] getClock: request took ${after.getTime()-before.getTime()}ms, diff = ${resp.currentTime - after}`);
+        }
+    });
+};
 
 module.exports = Bot;
