@@ -17,6 +17,13 @@ const log = new Winston.Logger({
     })]
 });
 
+const botConfig = {
+    clockPingInterval:  300,    // in seconds
+    reconnectAttempts:  35,     // number of reconnect attempts to make
+    reconnectInterval:  5,      // first interval in seconds used for reconnect attempts
+    reconnectRatio:     1.2     // ratio in the geometric series used to determine reconnect exponential back-off
+};
+
 /**
  * Class representing a Bot agent.
  *
@@ -33,7 +40,7 @@ class Bot extends Agent {
      * @param {Boolean} [subscribeAllConversations=false] - If false, subscribe only to bot's conversations. If true, subscribe to all conversations
      * @param {Number} [clockPingInterval=300000] - Keep-alive interval in ms
      */
-    constructor(config, initialState = 'ONLINE', subscribeAllConversations = false, clockPingInterval = 300000) {
+    constructor(config, initialState = 'ONLINE', subscribeAllConversations = false) {
         // Set agent config from environment or file (env takes precedence)
         const _config = {
             accountId: process.env.LP_ACCOUNTID || process.env.LP_ACCOUNT || config.accountId,
@@ -55,7 +62,6 @@ class Bot extends Agent {
         super(_config);
         this.config = _config;
         this.initialState = initialState;
-        this.clockPingInterval = clockPingInterval;
         this.subscribeAllConversations = subscribeAllConversations;
         this.init();
     }
@@ -85,14 +91,14 @@ class Bot extends Agent {
         subscribe to Agent State notifications, set the bot agent's initial state, subscribe to conversation
         notifications, and subscribe to routing tasks */
         this.on('connected', (message) => {
-            clearInterval(this._retryConnection);
+            clearTimeout(this._retryConnection);
             log.info(`[bot.js] connected: ${JSON.stringify(message)}`);
             this.emit(Bot.const.CONNECTED, message);
 
             // Get server clock at a regular interval in order to keep the connection alive
             this._pingClock = setInterval(() => {
                 getClock(this)
-            }, this.clockPingInterval);
+            }, botConfig.clockPingInterval * 1000);
 
             // Subscribe to Agent State notifications
             this.subscribeAgentsState({}, (e, resp) => {
@@ -172,7 +178,7 @@ class Bot extends Agent {
 
                     // If this is the first time seeing this conversation add it to my list,
                     // get the consumer profile, and subscribe to messaging events
-                    if (!this._isInMyConversationsList(change.result.convId)) {
+                    if (!this._isInMyConversations(change.result.convId)) {
 
                         // Add it to myConversations
                         this._addToMyConversations(change.result.convId);
@@ -224,7 +230,7 @@ class Bot extends Agent {
             body.changes.forEach(change => {
                 log.silly(`[bot.js] ms.MessagingEventNotification: ${JSON.stringify(change.event)} | ${JSON.stringify(change)}`);
 
-                if (this._isInMyConversationsList(change.dialogId)) { // This check is necessary because of the subscription bug
+                if (this._isInMyConversations(change.dialogId)) { // This check is necessary because of the subscription bug
                     // add to respond list all content events not by me
                     if (change.event.type === 'ContentEvent' && change.originatorId !== this.agentId) {
                         respond[`${body.dialogId}-${change.sequence}`] = {
@@ -271,7 +277,7 @@ class Bot extends Agent {
 
         // Handle errors
         this.on('error', err => {
-            log.error(`[bot.js] Got an unhandled error: ${JSON.stringify(err)}`);
+            log.error(`[bot.js] ${JSON.stringify(err)}`);
             this.emit(Bot.const.ERROR, err);
         });
 
@@ -279,11 +285,7 @@ class Bot extends Agent {
         this.on('closed', data => {
             clearInterval(this._pingClock);
             log.warn(`[bot.js] socket closed: ${JSON.stringify(data)}`);
-            let _this = this;
-            this._retryConnection = setInterval(() => {
-                log.info('[bot.js] reconnecting');
-                _this.reconnect();
-            }, 10000);
+            this._reconnect();
         });
     }
 
@@ -514,7 +516,7 @@ class Bot extends Agent {
      *
      * @private
      */
-    _isInMyConversationsList (conversationId) {
+    _isInMyConversations (conversationId) {
         return !!this.myConversations[conversationId];
     };
 
@@ -555,9 +557,22 @@ class Bot extends Agent {
         this.myConversations[conversationId] = _newData;
     };
 
-    _getClock () {
-        _getClock(this);
-    };
+    /**
+     * Reconnect, then try again after the specified delay (increasing exponentially) if attempt <
+     *
+     * @param {Number} delay
+     * @param {Number} attempt
+     * @private
+     */
+    _reconnect (delay = botConfig.reconnectInterval, attempt = 1) {
+        let _this = this;
+        log.warn(`[bot.js] reconnecting in ${Math.round(delay)}s (attempt ${attempt} of ${botConfig.reconnectAttempts})`);
+        this._retryConnection = setTimeout(() => {
+            _this.reconnect();
+            if (++attempt <= botConfig.reconnectAttempts) { _this._reconnect(delay * botConfig.reconnectRatio, attempt) }
+            else {log.error`[bot.js] failed to reconnect after ${botConfig.reconnectAttempts} attempts`}
+        }, delay * 1000)
+    }
 }
 
 /**

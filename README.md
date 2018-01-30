@@ -8,6 +8,7 @@ In all examples the bot's login credentials are loaded from the `config/config.j
 - [Agent Example](#agent-example)
 - [Reader Example](#reader-example)
 - [Manager Example](#manager-example)
+- [Running in Heroku](#running-in-heroku)
 
 ### Global Pre-requisites
 - A LivePerson Account with Messaging
@@ -63,6 +64,22 @@ This is an example of a bot acting as a Manager. It starts in the `AWAY` state s
    LP_ACCOUNT=(account name) LP_USER=(login name) node manager.js
    ```
    
+## Running in Heroku
+This project is ready to run the Agent sample in Heroku out of the box. Simply deselect the `web` dyno and select the `worker` dyno in Heroku's "Resources" tab, and specify the appropriate config vars in Heroku's "Settings" tab:
+
+```
+LP_ACCOUNTID or LP_ACCOUNT // required
+LP_USERNAME or LP_USER // required for username/password authentication and OAuth1 authentication
+LP_PASSWORD // required for username/password authentication
+LP_TOKEN // required for token authentication
+LP_USERID // required for token authentication
+LP_ASSERTION // required for SAML authentication
+LP_APPKEY // required for OAuth1 authentication
+LP_SECRET // required for OAuth1 authentication
+LP_ACCESSTOKEN // required for OAuth1 authentication
+LP_ACCESSTOKENSECRET // required for OAuth1 authentication
+```
+   
 [1]: /bot/bot.js
 [2]: agent.js
 [3]: reader.js
@@ -71,3 +88,4 @@ This is an example of a bot acting as a Manager. It starts in the `AWAY` state s
 [6]: agent.js#L28
 [7]: https://developers.liveperson.com/structured-content-templates.html
 [8]: https://developers.liveperson.com/overview.html
+[9]: https://github.com/donmanguno/node-agent-sdk#agent-class
