@@ -1,3 +1,6 @@
+### Note: These are merely samples intended to demonstrate API concepts and potential use cases. This code is not officially supported by LivePerson. 
+
+
 # Running The Sample Apps
 
 The best way to use the SDK is to extend the Agent class with your own logic and then instantiate this object in your projects. The included samples all rely on a [sample `Bot` class][1] that extends `Agent`.
